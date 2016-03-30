@@ -293,6 +293,7 @@ class DMatrix {
   static DMatrix* Load(const std::string& uri,
                        bool silent,
                        bool load_row_split,
+                       const std::set<int> * exclude = NULL,
                        const std::string& file_format = "auto");
   /*!
    * \brief create a new DMatrix, by wrapping a row_iterator, and meta info.
@@ -316,7 +317,8 @@ class DMatrix {
    * \return A created DMatrix.
    */
   static DMatrix* Create(dmlc::Parser<uint32_t>* parser,
-                         const std::string& cache_prefix = "");
+                         const std::string& cache_prefix = "",
+                         const std::set<int>* exclude = NULL);
 
  private:
   // allow learner class to access this field.

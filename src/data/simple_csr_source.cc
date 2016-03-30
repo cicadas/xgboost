@@ -31,7 +31,7 @@ void SimpleCSRSource::CopyFrom(DMatrix* src) {
   }
 }
 
-void SimpleCSRSource::CopyFrom(dmlc::Parser<uint32_t>* parser) {
+void SimpleCSRSource::CopyFrom(dmlc::Parser<uint32_t>* parser, const std::set<int>* exclude) {
   this->Clear();
   while (parser->Next()) {
     const dmlc::RowBlock<uint32_t>& batch = parser->Value();
@@ -47,7 +47,12 @@ void SimpleCSRSource::CopyFrom(dmlc::Parser<uint32_t>* parser) {
     // copy the data over
     for (size_t i = batch.offset[0]; i < batch.offset[batch.size]; ++i) {
       uint32_t index = batch.index[i];
-      bst_float fvalue = batch.value == nullptr ? 1.0f : batch.value[i];
+      bst_float fvalue;
+      if ( exclude != NULL && exclude->find(index) != exclude->end()){
+        fvalue = 0.0f;
+      }else{
+        fvalue = batch.value == nullptr ? 1.0f : batch.value[i];
+      }
       row_data_.push_back(SparseBatch::Entry(index, fvalue));
       this->info.num_col = std::max(this->info.num_col,
                                     static_cast<uint64_t>(index + 1));

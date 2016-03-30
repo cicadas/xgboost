@@ -50,7 +50,7 @@ class SimpleCSRSource : public DataSource {
    * \param src source data iter.
    * \param info The additional information reflected in the parser.
    */
-  void CopyFrom(dmlc::Parser<uint32_t>* src);
+  void CopyFrom(dmlc::Parser<uint32_t>* src, const std::set<int> * exclude = NULL);
   /*!
    * \brief Load data from binary stream.
    * \param fi the pointer to load data from.

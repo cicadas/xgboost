@@ -140,6 +140,7 @@ void MetaInfo::SetInfo(const char* key, const void* dptr, DataType dtype, size_t
 DMatrix* DMatrix::Load(const std::string& uri,
                        bool silent,
                        bool load_row_split,
+                       const std::set<int> * exclude,
                        const std::string& file_format) {
   std::string fname, cache_file;
   size_t dlm_pos = uri.find('#');
@@ -207,7 +208,7 @@ DMatrix* DMatrix::Load(const std::string& uri,
   if (file_format == "auto") ftype = "libsvm";
   std::unique_ptr<dmlc::Parser<uint32_t> > parser(
       dmlc::Parser<uint32_t>::Create(fname.c_str(), partid, npart, file_format.c_str()));
-  DMatrix* dmat = DMatrix::Create(parser.get(), cache_file);
+  DMatrix* dmat = DMatrix::Create(parser.get(), cache_file, exclude);
   if (!silent) {
     LOG(CONSOLE) << dmat->info().num_row << 'x' << dmat->info().num_col << " matrix with "
                  << dmat->info().num_nonzero << " entries loaded from " << uri;
@@ -228,10 +229,11 @@ DMatrix* DMatrix::Load(const std::string& uri,
 }
 
 DMatrix* DMatrix::Create(dmlc::Parser<uint32_t>* parser,
-                         const std::string& cache_prefix) {
+                         const std::string& cache_prefix,
+                         const std::set<int>* exclude) {
   if (cache_prefix.length() == 0) {
     std::unique_ptr<data::SimpleCSRSource> source(new data::SimpleCSRSource());
-    source->CopyFrom(parser);
+    source->CopyFrom(parser,exclude);
     return DMatrix::Create(std::move(source), cache_prefix);
   } else {
 #if DMLC_ENABLE_STD_THREAD

@@ -156,8 +156,17 @@ void CLITrain(const CLIParam& param) {
     LOG(CONSOLE) << "start " << pname << ":" << rabit::GetRank();
   }
   // load in data.
+  FeatureMap fmap;
+  std::set<int> * exclude = NULL;
+  if (param.name_fmap != "NULL") {
+    std::unique_ptr<dmlc::Stream> fs(
+        dmlc::Stream::Create(param.name_fmap.c_str(), "r"));
+    dmlc::istream is(fs.get());
+    fmap.LoadText(is);
+    exclude = fmap.GetExcludeFeature();
+  }
   std::unique_ptr<DMatrix> dtrain(
-      DMatrix::Load(param.train_path, param.silent != 0, param.dsplit == 2));
+      DMatrix::Load(param.train_path, param.silent != 0, param.dsplit == 2,exclude));
   std::vector<std::unique_ptr<DMatrix> > deval;
   std::vector<DMatrix*> cache_mats, eval_datasets;
   cache_mats.push_back(dtrain.get());

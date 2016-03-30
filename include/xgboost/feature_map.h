@@ -32,10 +32,26 @@ class FeatureMap {
    */
   inline void LoadText(std::istream& is) { // NOLINT(*)
     int fid;
-    std::string fname, ftype;
-    while (is >> fid >> fname >> ftype) {
+    std::string fidstr, fname, ftype;
+    exclude_feature.clear();
+    while (is >> fidstr >> fname >> ftype) {
+      if(fidstr.at(0)=='#'){
+        std::string tmpstr = fidstr.substr(1,std::string::npos);
+        fid = std::stoi(tmpstr);
+        exclude_feature.insert(fid);
+      }
+      else{
+        fid = std::stoi(fidstr);
+      }
       this->PushBack(fid, fname.c_str(), ftype.c_str());
     }
+  }
+  /*!
+   * \brief get a pointer to exclude feature ids
+   * \return a id set pointer
+   */
+  inline std::set<int> * GetExcludeFeature() {
+    return & exclude_feature;
   }
   /*!
    * \brief push back feature map.
@@ -83,6 +99,7 @@ class FeatureMap {
     LOG(FATAL) << "unknown feature type, use i for indicator and q for quantity";
     return kIndicator;
   }
+  std::set<int> exclude_feature;
   /*! \brief name of the feature */
   std::vector<std::string> names_;
   /*! \brief type of the feature */
