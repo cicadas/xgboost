@@ -45,22 +45,27 @@ void SimpleCSRSource::CopyFrom(dmlc::Parser<uint32_t>* parser, const std::set<in
     // update information
     this->info.num_row += batch.size;
     // copy the data over
-    for (size_t i = batch.offset[0]; i < batch.offset[batch.size]; ++i) {
-      uint32_t index = batch.index[i];
-      bst_float fvalue;
-      if ( exclude != NULL && exclude->find(index) != exclude->end()){
-        fvalue = 0.0f;
-      }else{
-        fvalue = batch.value == nullptr ? 1.0f : batch.value[i];
-      }
-      row_data_.push_back(SparseBatch::Entry(index, fvalue));
-      this->info.num_col = std::max(this->info.num_col,
-                                    static_cast<uint64_t>(index + 1));
-    }
     size_t top = row_ptr_.size();
-    for (size_t i = 0; i < batch.size; ++i) {
-      row_ptr_.push_back(row_ptr_[top - 1] + batch.offset[i + 1] - batch.offset[0]);
+    size_t offset = 0;
+    for (size_t ptr_idx = 0; ptr_idx < batch.size; ++ptr_idx) {
+      for (size_t i = batch.offset[ptr_idx]; i < batch.offset[ptr_idx + 1]; ++i) {
+        uint32_t index = batch.index[i];
+        bst_float fvalue;
+        if ( exclude != NULL && exclude->find(index) != exclude->end()){
+          continue;
+        }
+        ++ offset;
+        fvalue = batch.value == nullptr ? 1.0f : batch.value[i];
+        row_data_.push_back(SparseBatch::Entry(index, fvalue));
+        this->info.num_col = std::max(this->info.num_col,
+                                      static_cast<uint64_t>(index + 1));
+      }
+      row_ptr_.push_back(row_ptr_[top - 1] + offset);
     }
+    // size_t top = row_ptr_.size();
+    // for (size_t i = 0; i < batch.size; ++i) {
+    //   row_ptr_.push_back(row_ptr_[top - 1] + batch.offset[i + 1] - batch.offset[0] );
+    // }
   }
   this->info.num_nonzero = static_cast<uint64_t>(row_data_.size());
 }
